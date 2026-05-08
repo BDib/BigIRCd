@@ -1,0 +1,42 @@
+.
+             / \
+            /   \
+           /     \
+          /       \
+     調整  |       |
+           |  Wolf |
+           |  IRC  |
+           \       /
+            \     /
+             \   /
+              \ /
+               V
+             .---.
+            /     \
+           | () () |
+            \  ^  /
+             |||||
+            |||||||
+           |||||||||
+          |||||||||||
+         |||||||||||||
+        |||||||||||||||
+       |||||||||||||||||
+      |||||||||||||||||||
+     |||||||||||||||||||||
+    |||||||||||||||||||||||
+   |||||||||||||||||||||||||
+
+   WELCOME TO THE BIGIRCD MATRIX
+   -------------------------------------------------
+   IRC: The final frontier of the digital wasteland.
+   Where the packets roam free and the pings are low.
+   
+   RULES OF THE PACK:
+   1. Be nice (or at least pretend to be).
+   2. Respect the Ops, for they hold the +b hammer.
+   3. No flooding, unless you're a literal river.
+   4. Don't be a jerk; the logs are eternal.
+   
+   Awoo! The moon is high and the connection is stable.
+   -------------------------------------------------
