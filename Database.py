@@ -1,9 +1,10 @@
-import sqlite3
+import sqlite3, sys
 from typing import Optional, Tuple, List
-
+from Utils import data_path
+    
 class DatabaseManager:
-    def __init__(self, db_path: str = "bigircd.db"):
-        self.db_path = db_path
+    def __init__(self, db_path: Optional[str] = None):
+        self.db_path = db_path or data_path("bigircd.db")
         self._conn = None
 
     def __enter__(self):

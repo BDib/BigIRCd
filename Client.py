@@ -1,15 +1,13 @@
+from ast import arguments
 import threading
 import random
-import re, socket, hashlib, secrets, string
+import re, socket, hashlib, secrets, string, os
 from typing import Dict, Sequence, TYPE_CHECKING, Callable, Optional
+from Utils import irc_lower, resource_path
 
 if TYPE_CHECKING:
     from Server import Server
     from Channel import Channel
-
-def irc_lower(s: bytes) -> bytes:
-    trans = bytes.maketrans((string.ascii_lowercase.upper() + "[]\\^").encode(), (string.ascii_lowercase + "{}|~").encode())
-    return s.translate(trans)
 
 class Client:
     __linesep_regexp = re.compile(rb"\r?\n")
@@ -48,8 +46,10 @@ class Client:
     
     def __registration_handler(self, command: bytes, arguments: Sequence[bytes]) -> None:
         if command == b"CAP":
-            if arguments and arguments[0] == b"LS": 
-                self.reply(b"CAP * LS :")
+            # Acknowledge the 'LS' (List Capabilities) request
+            if arguments and arguments[0] == b"LS":
+                # Format: :<server> CAP * LS :
+                self.reply(f":{self.server.name.decode()} CAP * LS :".encode())
         
         elif command == b"NICK" and arguments:
             new_nick = arguments[0]
@@ -76,10 +76,13 @@ class Client:
         
         # Once both NICK and USER are received, finalize registration
         if self.nickname and self.user:
+            serv_name = self.server.name.decode()
+            nick = self.nickname.decode()
             # 1. Send the standard welcome burst
             self.reply(b"001 %s :Welcome to BigIRCd, %s" % (self.nickname, self.prefix))
             self.reply(b"002 %s :Your host is %s, version 1.0" % (self.nickname, self.server.name))
-            self.reply(b"004 %s %s BigIRCd 1.0 aiov" % (self.nickname, self.server.name))
+            self.reply(f":{serv_name} 003 {nick} :This server was created 2026".encode())
+            self.reply(b"004 %s %s BigIRCd 1.0 iowghraAs" % (self.nickname, self.server.name))
             
             # 2. Transition the handler so the client is "fully connected" before receiving the MOTD
             self.__handle_command = self.__command_handler
@@ -109,7 +112,7 @@ class Client:
         
         try:
             # Encoding utf-8 for special ASCII characters
-            with open("motd.txt", "r", encoding="utf-8") as f:
+            with open(resource_path("motd.txt"), "r", encoding="utf-8") as f:
                 for line in f:
                     # rstrip() removes the \n but leaves leading spaces for the art
                     clean_line = line.rstrip("\n").rstrip("\r")
@@ -174,11 +177,25 @@ class Client:
             chan.remove_client(self)
             del self.channels[chan_name]
 
-    def handle_rejoin(self, args):
-        """Custom command to quickly cycle a channel."""
-        if not args: return
-        self.handle_part(args)
-        self.handle_join(args)
+    def handle_rejoin(self, args: Sequence[bytes]):
+        """Cycles the user through their current channels."""
+        if not self.channels:
+            self.reply(b"442 :You are not on any channels")
+            return
+
+        # We take a list of current channels to avoid dictionary size 
+        # mutation errors during the loop
+        current_channels = list(self.channels.values())
+        
+        for chan in current_channels:
+            chan_name = chan.name
+            self.message_channel(chan, b"PART", chan_name, include_self=True)
+            chan.remove_client(self)
+            del self.channels[chan_name]
+            
+            # 2. Re-join the channel
+            # We call the existing JOIN logic
+            self.handle_rejoin([chan_name])
 
     def handle_ping(self, args):
         payload = args[0] if args else self.server.name
@@ -390,6 +407,7 @@ class Client:
         try:
             data = self.socket.recv(1024)
             if not data: self.disconnect("Closed")
+            print(f"[DEBUG] Received from {self.socket.getpeername()}: {data!r}")
             self.__readbuffer += data
             self._parse_buffer()
         except: self.disconnect("Error")
