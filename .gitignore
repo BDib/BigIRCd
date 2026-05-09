@@ -1,0 +1,13 @@
+# Databases
+*.db
+
+# SSL Certificates
+*.pem
+
+# Python artifacts
+__pycache__/
+*.pyc
+
+# IDEs
+.vscode/
+.idea/

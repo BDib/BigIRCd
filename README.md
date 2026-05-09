@@ -2,7 +2,7 @@
 
 A high-performance, refactored IRC server built with Python, featuring a centralized SQLite database for persistence, channel registration, and user authentication.
 
-## ?š€ Key Features
+## Key Features
 
 * **User Registration & Identification**: Secure account management using SHA-256 hashing and unique salts.
 * **Channel Persistence**: Register channels to save topics, access lists, and invite-only flags to a database.
@@ -11,7 +11,7 @@ A high-performance, refactored IRC server built with Python, featuring a central
 * **Custom MOTD**: Supports a file-based Message of the Day (`motd.txt`) with ASCII art and multi-line support.
 * **Cross-Platform Core**: Designed for Windows but built with portable Python logic.
 
-## ?› ?¸? Installation & Setup
+## Installation & Setup
 
 1. **Requirements**: Python 3.8+
 2. **Database**: The server automatically initializes `bigircd.db` on first run.
@@ -22,7 +22,7 @@ A high-performance, refactored IRC server built with Python, featuring a central
    python Main.py
    ```
 
-## ?’¬ User Commands
+## User Commands
 
 ### Connection & Services
 
@@ -56,7 +56,7 @@ A high-performance, refactored IRC server built with Python, featuring a central
 | `KICK`         | `/KICK #channel <nick>`          | Removes a user from the channel (requires Ops)             |
 | `MODE`         | `/MODE #channel <mode> <target>` | Sets channel modes like `+b` (ban) or `+i` (invite)        |
 
-## ?“– Usage Examples
+## Usage Examples
 
 ### 1. First Time Setup
 
@@ -77,7 +77,7 @@ A high-performance, refactored IRC server built with Python, featuring a central
 1. Ban a mask: `/MODE #lobby +b *!*@malicious-host.com` 
 2. Kick a user: `/KICK #lobby TrollUser :Please follow the rules.` 
 
-## ?“‚ Project Structure
+### 4. Project Structure
 
 * `Main.py`: Entry point and server initialization.
 * `Server.py`: Core socket handling, client management, and DB schema setup.
@@ -85,3 +85,16 @@ A high-performance, refactored IRC server built with Python, featuring a central
 * `Channel.py`: Logic for channel membership and permission checks.
 * `Database.py`: SQLite wrapper for persistent storage.
 * `motd.txt`: Plain text file for the server welcome message.
+
+## Features Updates
+- **Dual Port Support:** Plain-text (6667) and SSL (6697).
+- **Persistence:** SQLite database for registered channels and access levels.
+- **Minimalist:** Built using the `select` multiplexing module.
+
+## How to Run
+1. Install dependencies: `pip install -r requirements.txt`
+2. Generate certs: `python CertGen.py` (if using SSL)
+3. Start the server: `python Main.py`
+
+## Project Status
+Currently optimizing the non-blocking SSL handshake for Windows environments.
