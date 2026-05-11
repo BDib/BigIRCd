@@ -1,6 +1,7 @@
 from ast import arguments
 import threading
 import random
+import ssl
 import re, socket, hashlib, secrets, string, os
 from typing import Dict, Sequence, TYPE_CHECKING, Callable, Optional
 from Utils import irc_lower, resource_path
@@ -41,8 +42,10 @@ class Client:
         return False
 
     def send_numeric(self, code, message):
-        full_msg = f":bigircd {code} {self.nickname or '*'} {message}\r\n"
-        self.socket.send(full_msg.encode())
+        code_b = code.encode() if isinstance(code, str) else code
+        nick_b = self.nickname if self.nickname else b"*"
+        msg_b = message.encode() if isinstance(message, str) else message
+        self.reply(b"%s %s %s" % (code_b, nick_b, msg_b))
     
     def __registration_handler(self, command: bytes, arguments: Sequence[bytes]) -> None:
         if command == b"CAP":
@@ -410,7 +413,11 @@ class Client:
             print(f"[DEBUG] Received from {self.socket.getpeername()}: {data!r}")
             self.__readbuffer += data
             self._parse_buffer()
-        except: self.disconnect("Error")
+        except (BlockingIOError, ssl.SSLWantReadError, ssl.SSLWantWriteError):
+            return
+        except Exception as e:
+            print(f"[*] Read Error: {e}")
+            self.disconnect("Error")
 
     def _parse_buffer(self):
         lines = self.__linesep_regexp.split(self.__readbuffer)
@@ -429,9 +436,14 @@ class Client:
 
     def socket_writable_notification(self):
         try:
-            sent = self.socket.send(self.__writebuffer)
-            self.__writebuffer = self.__writebuffer[sent:]
-        except: pass
+            if self.__writebuffer:
+                sent = self.socket.send(self.__writebuffer)
+                self.__writebuffer = self.__writebuffer[sent:]
+        except (BlockingIOError, ssl.SSLWantReadError, ssl.SSLWantWriteError):
+            return
+        except Exception as e:
+            print(f"[*] Write Error: {e}")
+            self.disconnect("Write Error")
 
     def disconnect(self, msg):
         self.server.remove_client(self, msg.encode()); self.socket.close()
